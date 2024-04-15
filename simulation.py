@@ -1,6 +1,15 @@
 import pybullet as p
 import numpy as np
 
+TOKEN_REWARD = 10
+DEAD_END_PENALTY = -5
+TIME_STEP_PENALTY = -0.1
+
+#define as list of tuples
+tokens = [] 
+dead_ends = []
+goal_position = () #just one tuple here
+
 # create walls, start, and end points of the maze
 def create_maze():
     pass
@@ -9,39 +18,67 @@ def create_maze():
 def create_robot():
     pass
 
-# convert observation to state
+def calculate_reward(state, next_state, reached_goal):
+    reward = TIME_STEP_PENALTY
+    if is_token(next_state[pos]):
+        reward += TOKEN_REWARD
+    elif is_dead_end(next_state[pos]):
+        reward += DEAD_END_PENALTY
+    elif reached_goal(next_state[pos]):
+        reward += 10
+    return reward
+
+def is_token(position):
+    return position in tokens
+
+#TODO: modify so it's the postion and orientation (it's not a dead end if you are turning trying to get out of it)
+def is_dead_end(position):
+    return position in dead_ends
+
+def def reached_goal(position)
+    return position == goal_postion
+
 def observation_to_state(observation):
-    pass
+    position, orientation = observation
+    state = {pos: postition, dir: orientation}
+    return state
 
-# take action and return next state, reward, and if goal reached
 def take_action(action):
-    pass
+    # TODO: tell the robot to do something
+    observation = p.getBasePositionAndOrientation(robot)
+    next_state = observation_to_state(observation)
+    reward = calculate_reward(state, next_state, goal_reached)
+    return next_state, reward, goal_reached
 
-# choose an action based on epsilon-greedy policy
 def choose_action(state, Q, epsilon):
-    pass
+    random_num = random.uniform(0, 1)
+    if state not in Q or andom.uniform(0, 1) < epsilon:
+        # Explore!!
+        action = random.randint(0, num_actions - 1)
+    else:
+        action = np.argmax(Q[state])
+    return action
 
-# update Q-values based on Q-learning algorithm
 def update_Q(Q, state, action, reward, next_state, alpha, gamma):
-    pass
+    if Q[state][action] is None:
+        Q[state][action] = 1
+    current_Q = Q[state][action]
+    max_next_Q = np.max(Q[next_state])
+    new_Q = current_Q + alpha * (reward + gamma * max_next_Q - current_Q)
+    Q[state][action] = new_Q
 
 # Training params
 epsilon = 0.1
 alpha = 0.1  # Learning rate
 gamma = 0.9  # Discount factor
 
-# Initialize Q-values arbitrarily
 num_states = 100
 num_actions = 4  # (left, right, forward, backwards)
 Q = np.zeros((num_states, num_actions))
-
-# Perform Q-learning to learn the optimal policy
 num_episodes = 1000
 
-# PyBullet simulation setup
 p.connect(p.GUI)  # Connect to the physics server in GUI mode
 
-# Main simulation loop
 for _ in range(num_episodes):
     p.resetSimulation()
     maze = create_maze()
@@ -57,5 +94,4 @@ for _ in range(num_episodes):
         update_Q(Q, state, action, reward, next_state, alpha, gamma)
         state = next_state
 
-# Clean up PyBullet simulation
 p.disconnect()
